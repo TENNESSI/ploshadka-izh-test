@@ -1,8 +1,7 @@
 from aiogram import Bot, Dispatcher, types
-from aiogram.filters import Command
 from config.settings import config
-import handlers.client
-import handlers.admin
+from handlers import client, admin
+from middlewares.admin import AdminMiddleware
 import asyncio
 import logging
 
@@ -15,13 +14,8 @@ async def main():
     dp = Dispatcher()
 
     # Подключаем роутеры
-    dp.include_router(handlers.admin.router)
-    dp.include_router(handlers.client.router)
-
-    # Базовая команда для проверки
-    @dp.message(Command("start"))
-    async def start(message: types.Message):
-        await message.answer("Бот запущен и работает!")
+    dp.message.middleware(AdminMiddleware())
+    dp.include_routers(admin.router, client.router)
 
     try:
         await dp.start_polling(bot)
